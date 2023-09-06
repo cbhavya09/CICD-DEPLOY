@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Java
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+
+    - name: Build and package
+      run: |
+        ./gradlew build
+        mkdir -p build/artifacts
+        cp -r build/libs/* build/artifacts/
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: app-artifact
+        path: build/artifacts/
+
+  create_release:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up GitHub CLI
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.x'
+
+    - name: Publish the artifact to GitHub release
+      run: |
+        gh release create v1.0.0 build/artifacts/* --title "Release v1.0.0" --notes "Release notes for v1.0.0"
+      env:
+        GH_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}

@@ -1,0 +1,32 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download artifact from CI
+      uses: actions/download-artifact@v2
+      with:
+        name: app-artifact
+        path: app-artifact
+
+    - name: Extract artifact
+      run: |
+        unzip -q app-artifact/*.zip -d extracted
+        # Adjust this command based on your artifact format
+
+    - name: Deploy to Tomcat
+      run: |
+        # Use a script or commands to deploy to your Tomcat server
+        # For example, you can use 'curl' to deploy a WAR file:
+        # curl -T extracted/*.war http://tomcat-server:8080/manager/text/deploy?path=/context-path
